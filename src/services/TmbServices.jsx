@@ -30,6 +30,7 @@ async function getData(endpoint, params = {}){
 
 function getProductById(productType, productId, params={}) {  
   return getData(`/${productType}/${productId}`, {append_to_response:params});
+
 }
 
 function getProductsByList(productType, productList) {
@@ -45,4 +46,14 @@ function getImageUrl(path, size = "w500") {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : "url_de_imagen_predeterminada";
 } 
 
-export { getData, getProductById, getProductsByList, getProductsByTrendy, getImageUrl };
+function getFilterCarrusel(filterParams = {}, type = 'movie') {
+  const defaultParams = {
+    sort_by: 'popularity.desc', // Orden por defecto
+    page: 1, // Página por defecto
+  };
+
+  const finalParams = { ...defaultParams, ...filterParams }; // Combinar filtros personalizados con los predeterminados
+  return getData(`/discover/${type}`, finalParams);
+}
+
+export { getData, getProductById, getProductsByList, getProductsByTrendy, getImageUrl, getFilterCarrusel };

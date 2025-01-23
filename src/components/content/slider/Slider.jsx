@@ -65,3 +65,5 @@ return(
 }
 
 export default Slider;
+
+
