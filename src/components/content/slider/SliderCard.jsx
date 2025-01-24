@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
+import ReactPlayer from 'react-player';
 import './Slider.css';
-import { Link } from "react-router-dom";
 
 
 function Tags({ media }) {
@@ -24,30 +25,78 @@ function Subtitle({ media }) {
   return null; 
 }
 
+function SliderCard({ media, isActive, onPlayTrailer, onTrailerEnd }) {
+  const [showTrailer, setShowTrailer] = useState(false); 
+  const TRAILER_DURATION = 50; 
 
-function SliderCard({ media }) {
+  useEffect(() => {
+    if (isActive) {
+      console.log('Slide activo:', media.title || media.name);
+
+      const timer = setTimeout(() => {
+        setShowTrailer(true); 
+        onPlayTrailer(); 
+      }, 5000); 
+
+      return () => {
+        clearTimeout(timer);
+        console.log('Limpieza del temporizador para:', media.title || media.name);
+      };
+    } else {
+      setShowTrailer(false); 
+      console.log('Reiniciando a la imagen para:', media.title || media.name);
+    }
+  }, [isActive, media, onPlayTrailer]);
+
   return (
+    
     <div
       className="slider-card"
       style={{
-        backgroundImage: `url(https://image.tmdb.org/t/p/original${media.backdrop_path})`,
+        backgroundImage: !showTrailer
+          ? `url(https://image.tmdb.org/t/p/original${media.backdrop_path})`
+          : 'none',
       }}
     >
+     
       <div className="slider-overlay"></div>
-      <div className="slider-card-content">       
-        <Tags media={media} />        
+      <div className="slider-content">       
+        <Tags media={media} />
         <h3 className="slider-title">{media.title || media.name}</h3>
-      
-        <Subtitle media={media} />  
-        
-        <button
-          className="slider-button"
-          onClick={() => onPlayTrailer(media.id, media.media_type)}
-        > <Link to="/construction" target="_blank">
-          Ver Ahora 
-        </Link>
-        </button>
+        <Subtitle media={media} />
 
+        {showTrailer ? (
+          <div className="trailer-container">
+            <ReactPlayer
+              className="react-player"
+              url={`https://www.youtube.com/watch?v=${media.trailerKey}`}
+              playing={isActive}
+              controls={true} 
+              width="100%"
+              height="100%"
+              config={{
+                youtube: {
+                  playerVars: {
+                    autoplay: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0,
+                  },
+                },
+              }}
+              onProgress={({ playedSeconds }) => {
+                if (playedSeconds >= TRAILER_DURATION) {
+                  console.log(`Tráiler interrumpido después de ${TRAILER_DURATION} segundos`);
+                  onTrailerEnd();
+                }
+              }}
+              onEnded={onTrailerEnd} 
+            />
+          </div>
+        ) : null}
+
+        <button className="slider-button"> Ver Ahora </button>
+        
       </div>
     </div>
   );
@@ -59,10 +108,14 @@ SliderCard.propTypes = {
     title: PropTypes.string,
     name: PropTypes.string,
     backdrop_path: PropTypes.string.isRequired,
-    media_type: PropTypes.oneOf(['movie', 'tv']).isRequired,
+    trailerKey: PropTypes.string,
     director: PropTypes.string,
     seasons: PropTypes.number,
-  }).isRequired,  
+    media_type: PropTypes.oneOf(['movie', 'tv']).isRequired,
+  }).isRequired,
+  isActive: PropTypes.bool.isRequired,
+  onPlayTrailer: PropTypes.func.isRequired,
+  onTrailerEnd: PropTypes.func.isRequired,
 };
 
 Tags.propTypes = {
@@ -81,4 +134,3 @@ Subtitle.propTypes = {
 };
 
 export default SliderCard;
-
